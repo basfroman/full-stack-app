@@ -2,6 +2,7 @@
 node_modules
 /dist
 
+nodemon.json
 
 # local env files
 .env.local
