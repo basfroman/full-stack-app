@@ -12,7 +12,7 @@ export default {
             v-for="course in courses"
             :key="course.id"
         >
-            <img :src="course.image" />
+            <img :src="course.imageURL" />
             <h3 class="product-name">{{ course.name }}</h3>
             <p class="product-price">{{ course.price }}</p>
 

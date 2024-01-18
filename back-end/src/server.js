@@ -1,5 +1,6 @@
 import express from "express";
 import { MongoClient } from 'mongodb';
+import path from 'path';
 
 
 const dbUrlPattern = 'mongodb+srv://<user>:<password>@<db_name>.ipb1usb.mongodb.net/?retryWrites=true&w=majority'
@@ -18,6 +19,7 @@ async function startServer() {
 
     const app = express();
     app.use(express.json());
+    app.use('/images', express.static(path.join(__dirname, '../assets/images')));
 
     async function populateCartIds(ids) {
         return Promise.all(ids.map(id => courses.findOne({ id: id })));
@@ -27,22 +29,22 @@ async function startServer() {
         return await courses.findOne({ id: id });
     }
     
-    app.get('/courses', async (_, res) => {
+    app.get('/api/courses', async (_, res) => {
         res.json(await courses.find({}).toArray());
     });
     
-    app.get('/courses/:courseId', async (req, res) => {
+    app.get('/api/courses/:courseId', async (req, res) => {
         const course = await findCourse(req.params.courseId);
         res.json(course ? course : {});
     });
     
-    app.get('/users/:userId/cart', async (req, res) => {
+    app.get('/api/users/:userId/cart', async (req, res) => {
         const cartItems = await db.collection('users').findOne({ id: req.params.userId });
         const populatedCart = await populateCartIds(cartItems ? cartItems.cartItems : []);
         res.json(populatedCart);
     });
     
-    app.post('/users/:userId/cart', async (req, res) => {
+    app.post('/api/users/:userId/cart', async (req, res) => {
         const userId = req.params.userId;
         const courseId = req.body.id;
         
@@ -60,7 +62,7 @@ async function startServer() {
         res.json(populatedCart);
     });
     
-    app.delete('/users/:userId/cart/:courseId', async (req, res) => {
+    app.delete('/api/users/:userId/cart/:courseId', async (req, res) => {
         const userId = req.params.userId;
         const courseId = req.params.courseId;
 
