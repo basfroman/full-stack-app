@@ -1,6 +1,7 @@
 import express from "express";
 import { MongoClient } from 'mongodb';
 import path from 'path';
+import { connected } from "process";
 
 
 const dbUrlPattern = 'mongodb+srv://<user>:<password>@<db_name>.ipb1usb.mongodb.net/?retryWrites=true&w=majority'
@@ -21,6 +22,15 @@ async function startServer() {
     app.use(express.json());
     app.use('/images', express.static(path.join(__dirname, '../assets/images')));
 
+    async function getUser(id) {
+        let user = await db.collection('users').findOne({ id: id });
+        if (!user) {
+            db.collection('users').insertOne({id: id, cartItems: []});
+            user = await db.collection('users').findOne({ id: id });
+        }
+        return user
+    }
+
     async function populateCartIds(ids) {
         return Promise.all(ids.map(id => courses.findOne({ id: id })));
     }
@@ -39,26 +49,20 @@ async function startServer() {
     });
     
     app.get('/api/users/:userId/cart', async (req, res) => {
-        const cartItems = await db.collection('users').findOne({ id: req.params.userId });
-        const populatedCart = await populateCartIds(cartItems ? cartItems.cartItems : []);
+        const user = await getUser(req.params.userId);
+        const populatedCart = await populateCartIds(user ? user.cartItems : []);
         res.json(populatedCart);
     });
     
     app.post('/api/users/:userId/cart', async (req, res) => {
         const userId = req.params.userId;
-        const courseId = req.body.id;
-        
-        if (await findCourse(courseId)) {
-            await db.collection('users').updateOne({'id': userId}, {
-                $addToSet: {cartItems: courseId},
-            });
 
-        } else {
-            res.statusMessage = 'The course to be added was not found.'
-        }
+        await db.collection('users').updateOne({id: userId}, {
+            $addToSet: {cartItems: req.body.id},
+        });
 
-        const cartItems = await db.collection('users').findOne({ id: userId });
-        const populatedCart = await populateCartIds(cartItems ? cartItems.cartItems : []);
+        const user = await getUser(req.params.userId);
+        const populatedCart = await populateCartIds(user ? user.cartItems : []);
         res.json(populatedCart);
     });
     
@@ -70,8 +74,8 @@ async function startServer() {
             $pull: { cartItems: courseId },
         });
 
-        const cartItems = await db.collection('users').findOne({ id: userId });
-        const populatedCart = await populateCartIds(cartItems ? cartItems.cartItems : []);
+        const user = await getUser(req.params.userId);
+        const populatedCart = await populateCartIds(user ? user.cartItems : []);
         res.json(populatedCart);
     });
     

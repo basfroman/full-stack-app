@@ -13,10 +13,9 @@
 import axios from 'axios';
 import ShoppingList from '@/components/ShoppingList.vue';
 
-const userId = '01';
-
 export default {
     name: "SoppingCartPage",
+    props: ['user'],
     components: {
         ShoppingList,
     },
@@ -27,16 +26,18 @@ export default {
     },
     methods: {
         async removeCourseFromCart(courseId) {
-            const response = await axios.delete(`/api/users/${userId}/cart/${courseId}`);
+            const response = await axios.delete(`/api/users/${this.user.uid}/cart/${courseId}`);
             const updatedCart = response.data;
             this.cartItems = updatedCart;
 
         },
     },
     async created() {
-        const response = await axios.get(`/api/users/${userId}/cart`)
-        const cartItems = response.data;
-        this.cartItems = cartItems;
+        if (this.user) {
+            const response = await axios.get(`/api/users/${this.user.uid}/cart`)
+            const cartItems = response.data;
+            this.cartItems = cartItems;
+        }  
     }
 }
 </script>

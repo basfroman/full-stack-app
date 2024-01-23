@@ -9,6 +9,12 @@ import CourseDetailPage from './pages/CourseDetailPage.vue';
 import CoursesPage from './pages/CoursesPage.vue';
 import PageNotFound from './pages/PageNotFound.vue';
 
+import { initializeApp } from "firebase/app";
+import firebaseConfig from './firebaseConfig'
+
+const app = initializeApp(firebaseConfig);
+console.log(app);
+
 createApp(App)
 .use(VueRouter.createRouter({
     history: VueRouter.createWebHistory(process.env.BASE_URL),
